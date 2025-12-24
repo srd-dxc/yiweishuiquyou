@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buckley-Leverett水驱油理论计算程序</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1a6dcc 0%, #0d4a9c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 20px rgba(13, 74, 156, 0.2);
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 900px;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 1100px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card-title {
+            color: #1a6dcc;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e8f0fe;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #444;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #1a6dcc;
+            box-shadow: 0 0 0 3px rgba(26, 109, 204, 0.1);
+        }
+        
+        .input-range {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .input-range input {
+            flex: 1;
+        }
+        
+        .range-value {
+            min-width: 60px;
+            text-align: center;
+            font-weight: 600;
+            color: #1a6dcc;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #1a6dcc 0%, #0d4a9c 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, #0d4a9c 0%, #08316e 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(13, 74, 156, 0.2);
+        }
+        
+        .btn i {
+            font-size: 1.2rem;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+        
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+        }
+        
+        .results {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            margin-top: 30px;
+        }
+        
+        .results-title {
+            color: #1a6dcc;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e8f0fe;
+            font-weight: 600;
+        }
+        
+        .results-content {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th {
+            background-color: #f0f7ff;
+            color: #1a6dcc;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #dce8ff;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:hover {
+            background-color: #f9fbff;
+        }
+        
+        .plot-container {
+            height: 500px;
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .theory {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+        
+        .theory-content {
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+        
+        .theory-content p {
+            margin-bottom: 15px;
+        }
+        
+        .theory-content h3 {
+            color: #1a6dcc;
+            margin: 25px 0 15px 0;
+            font-size: 1.3rem;
+        }
+        
+        .equation {
+            background-color: #f9fbff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #1a6dcc;
+            font-size: 1.1rem;
+            overflow-x: auto;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .highlight {
+            color: #1a6dcc;
+            font-weight: 600;
+        }
+        
+        .note {
+            background-color: #fff9e6;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .note-title {
+            font-weight: 600;
+            color: #b38700;
+            margin-bottom: 8px;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e8f0fe;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            color: #1a6dcc;
+            border-bottom: 3px solid #1a6dcc;
+            background-color: #f0f7ff;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .export-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .export-btn {
+            flex: 1;
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+        
+        .export-btn:hover {
+            background: linear-gradient(135deg, #1e7e34 0%, #145523 100%);
+        }
+        
+        .export-btn.secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+        
+        .export-btn.secondary:hover {
+            background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+        }
+        
+        .double-value-note {
+            background-color: #e8f4fd;
+            border-left: 4px solid #1a6dcc;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .double-value-note-title {
+            font-weight: 600;
+            color: #1a6dcc;
+            margin-bottom: 8px;
+        }
+        
+        .measured-data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .measured-data-table th {
+            background-color: #f0f7ff;
+            color: #1a6dcc;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .measured-data-table td {
+            padding: 8px 10px;
+            text-align: center;
+            border: 1px solid #eee;
+        }
+        
+        .measured-data-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .measured-data-buttons .btn {
+            flex: 1;
+        }
+        
+        .textarea-data {
+            font-family: monospace;
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .data-format-note {
+            background-color: #f8f9fa;
+            border-left: 4px solid #6c757d;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .input-with-unit {
+            position: relative;
+        }
+        
+        .input-with-unit input {
+            padding-right: 50px;
+        }
+        
+        .unit {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .parameter-group {
+            background-color: #f9fbff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid #e8f0fe;
+        }
+        
+        .parameter-group-title {
+            color: #1a6dcc;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .parameter-group-title::before {
+            content: "";
+            display: block;
+            width: 4px;
+            height: 20px;
+            background-color: #1a6dcc;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Buckley-Leverett水驱油理论计算程序</h1>
+        <p class="subtitle">基于非活塞式水驱油理论，使用实测相渗透率曲线数据计算含水率(f_w)、含水率导数(f'_w)、饱和度分布及饱和度-位置双值曲线。</p>
+    </header>
+    
+    <div class="theory">
+        <h2 class="card-title">理论基础</h2>
+        <div class="theory-content">
+            <p>Buckley-Leverett理论是研究非活塞式水驱油过程的基础理论。该理论基于以下假设：</p>
+            <ul style="margin-left: 20px; margin-bottom: 15px;">
+                <li>油水两相不可压缩</li>
+                <li>渗流服从达西定律</li>
+                <li>油水相对渗透率是含水饱和度的单值函数</li>
+                <li>忽略毛管压力和重力影响</li>
+            </ul>
+            
+            <h3>含水率计算公式</h3>
+            <div class="equation">
+                \[
+                f_w(S_w) = \frac{1}{1 + \frac{K_{ro}(S_w)}{\mu_o} \cdot \frac{\mu_w}{K_{rw}(S_w)}}
+                \]
+            </div>
+            
+            <p>其中：</p>
+            <ul style="margin-left: 20px; margin-bottom: 15px;">
+                <li>\(f_w(S_w)\) - 含水率（水相分流率）</li>
+                <li>\(K_{rw}(S_w)\) - 水相相对渗透率</li>
+                <li>\(K_{ro}(S_w)\) - 油相相对渗透率</li>
+                <li>\(\mu_w\) - 水相粘度 (mPa·s)</li>
+                <li>\(\mu_o\) - 油相粘度 (mPa·s)</li>
+                <li>\(S_w\) - 含水饱和度</li>
+            </ul>
+            
+            <h3>饱和度分布方程（式6-37）</h3>
+            <div class="equation">
+                \[
+                x - x_0 = \frac{f'_w(S_w)}{\phi A} \int_0^t Q \, dt
+                \]
+            </div>
+            
+            <p>其中：</p>
+            <ul style="margin-left: 20px; margin-bottom: 15px;">
+                <li>\(x\) - 等饱和度面在时刻t的位置</li>
+                <li>\(x_0\) - 等饱和度面的初始位置</li>
+                <li>\(f'_w(S_w)\) - 含水率对饱和度的导数</li>
+                <li>\(\phi\) - 孔隙度</li>
+                <li>\(A\) - 横截面积 = 宽度 × 厚度 (m²)</li>
+                <li>\(\int_0^t Q \, dt = q_w \times t\) - 累积注入量 = 日注入速度 × 时间 (m³)</li>
+            </ul>
+            
+            <h3>表6-2 相渗透率曲线数据</h3>
+            <div class="equation">
+                <table class="measured-data-table">
+                    <thead>
+                        <tr>
+                            <th>\( S_w \)</th>
+                            <th>\( K_{rw} \)</th>
+                            <th>\( K_{ro} \)</th>
+                            <th>\( S_w \)</th>
+                            <th>\( K_{rw} \)</th>
+                            <th>\( K_{ro} \)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0.200</td><td>0.000</td><td>0.800</td>
+                            <td>0.550</td><td>0.100</td><td>0.120</td>
+                        </tr>
+                        <tr>
+                            <td>0.250</td><td>0.002</td><td>0.610</td>
+                            <td>0.600</td><td>0.132</td><td>0.081</td>
+                        </tr>
+                        <tr>
+                            <td>0.300</td><td>0.009</td><td>0.470</td>
+                            <td>0.650</td><td>0.170</td><td>0.050</td>
+                        </tr>
+                        <tr>
+                            <td>0.350</td><td>0.020</td><td>0.370</td>
+                            <td>0.700</td><td>0.208</td><td>0.027</td>
+                        </tr>
+                        <tr>
+                            <td>0.400</td><td>0.038</td><td>0.285</td>
+                            <td>0.750</td><td>0.251</td><td>0.010</td>
+                        </tr>
+                        <tr>
+                            <td>0.450</td><td>0.051</td><td>0.220</td>
+                            <td>0.800</td><td>0.300</td><td>0.000</td>
+                        </tr>
+                        <tr>
+                            <td>0.500</td><td>0.075</td><td>0.163</td>
+                            <td></td><td></td><td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="note">
+                <div class="note-title">注意：</div>
+                <p>本程序使用实测相渗透率曲线数据进行计算。请在下方输入实测数据，程序将对数据进行线性插值处理。</p>
+                <p>束缚水饱和度(S_wc)和残余油饱和度(S_or)用于确定有效饱和度范围。</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="card">
+            <h2 class="card-title">参数设置</h2>
+            
+            <div class="parameter-group">
+                <div class="parameter-group-title">饱和度参数</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="swc">束缚水饱和度 S_wc</label>
+                        <input type="number" id="swc" min="0" max="0.5" step="0.01" value="0.2">
+                    </div>
+                    <div class="form-group">
+                        <label for="sor">残余油饱和度 S_or</label>
+                        <input type="number" id="sor" min="0" max="0.5" step="0.01" value="0.2">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="swRange">含水饱和度范围 (S_w)</label>
+                    <div class="input-range">
+                        <input type="range" id="swMin" min="0.2" max="0.7" step="0.01" value="0.2">
+                        <span class="range-value" id="swMinValue">0.20</span>
+                        <span>到</span>
+                        <input type="range" id="swMax" min="0.3" max="0.9" step="0.01" value="0.8">
+                        <span class="range-value" id="swMaxValue">0.80</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="swPoints">饱和度点数</label>
+                    <input type="number" id="swPoints" min="10" max="200" value="13">
+                </div>
+            </div>
+            
+            <div class="parameter-group">
+                <div class="parameter-group-title">流体性质参数</div>
+                <div class="form-row">
+                    <div class="form-group input-with-unit">
+                        <label for="mu_o">油相粘度 μ_o</label>
+                        <input type="number" id="mu_o" min="0.5" max="100" step="0.1" value="1.0">
+                        <span class="unit">mPa·s</span>
+                    </div>
+                    
+                    <div class="form-group input-with-unit">
+                        <label for="mu_w">水相粘度 μ_w</label>
+                        <input type="number" id="mu_w" min="0.1" max="10" step="0.1" value="0.5">
+                        <span class="unit">mPa·s</span>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="bo">油的体积系数 B_o</label>
+                        <input type="number" id="bo" min="1.0" max="2.0" step="0.01" value="1.3">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bw">水的体积系数 B_w</label>
+                        <input type="number" id="bw" min="1.0" max="1.1" step="0.01" value="1.0">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="parameter-group">
+                <div class="parameter-group-title">岩石物性参数</div>
+                <div class="form-group">
+                    <label for="porosity">孔隙度 φ</label>
+                    <input type="number" id="porosity" min="0.01" max="0.5" step="0.01" value="0.2">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group input-with-unit">
+                        <label for="width">宽度 W</label>
+                        <input type="number" id="width" min="0.1" max="1000" step="0.1" value="100">
+                        <span class="unit">m</span>
+                    </div>
+                    
+                    <div class="form-group input-with-unit">
+                        <label for="thickness">厚度 h</label>
+                        <input type="number" id="thickness" min="0.1" max="100" step="0.1" value="12">
+                        <span class="unit">m</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="parameter-group">
+                <div class="parameter-group-title">注入参数</div>
+                <div class="form-row">
+                    <div class="form-group input-with-unit">
+                        <label for="dailyInjectionRate">日注入速度 q_w</label>
+                        <input type="number" id="dailyInjectionRate" min="1" max="10000" step="10" value="160">
+                        <span class="unit">m³/d</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="timeDays">注入时间 t</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="timeDays" min="1" max="100000" step="1" value="100">
+                            <span class="unit">天</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cumulativeInjection">累积注入量 ∫Qdt (自动计算)</label>
+                    <div class="input-with-unit">
+                        <input type="text" id="cumulativeInjection" readonly style="background-color: #f5f7fa;">
+                        <span class="unit">m³</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="parameter-group">
+                <div class="parameter-group-title">实测相对渗透率数据</div>
+                <div class="form-group">
+                    <label for="measuredData">数据格式: Sw,Krw,Kro (每行一组)</label>
+                    <textarea id="measuredData" class="textarea-data" rows="10">0.200,0.000,0.800
+0.250,0.002,0.610
+0.300,0.009,0.470
+0.350,0.020,0.370
+0.400,0.038,0.285
+0.450,0.051,0.220
+0.500,0.075,0.163
+0.550,0.100,0.120
+0.600,0.132,0.081
+0.650,0.170,0.050
+0.700,0.208,0.027
+0.750,0.251,0.010
+0.800,0.300,0.000</textarea>
+                </div>
+                
+                <div class="data-format-note">
+                    <strong>数据格式说明：</strong><br>
+                    1. 每行一组数据，格式为：饱和度,水相相对渗透率,油相相对渗透率<br>
+                    2. 数值间用逗号分隔，不要添加空格<br>
+                    3. 饱和度数据必须按升序排列<br>
+                    4. 程序将对数据进行线性插值处理
+                </div>
+                
+                <div class="measured-data-buttons">
+                    <button class="btn btn-secondary" id="loadDefaultDataBtn">
+                        <span>加载表6-2默认数据</span>
+                    </button>
+                    <button class="btn btn-secondary" id="clearDataBtn">
+                        <span>清空数据</span>
+                    </button>
+                </div>
+            </div>
+            
+            <button class="btn" id="calculateBtn">
+                <span>计算并绘图</span>
+            </button>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">相对渗透率曲线</h2>
+            <div id="relativePermeabilityPlot" class="plot-container"></div>
+            
+            <div class="tabs">
+                <div class="tab active" data-tab="fw">含水率曲线</div>
+                <div class="tab" data-tab="dfw">含水率导数曲线</div>
+                <div class="tab" data-tab="doubleValue">饱和度-位置双值曲线</div>
+            </div>
+            
+            <div class="tab-content active" id="fw-tab">
+                <div id="fwPlot" class="plot-container"></div>
+            </div>
+            
+            <div class="tab-content" id="dfw-tab">
+                <div id="dfwPlot" class="plot-container"></div>
+            </div>
+            
+            <div class="tab-content" id="doubleValue-tab">
+                <div class="double-value-note">
+                    <div class="double-value-note-title">饱和度-位置双值曲线说明：</div>
+                    <p>根据式(6-37)：\(x - x_0 = \frac{f'_w(S_w)}{\phi A} \int_0^t Q \, dt\)，计算不同饱和度对应的位置。</p>
+                    <p>其中：A = 宽度 × 厚度，∫Qdt = 日注入速度 × 时间</p>
+                    <p>红色曲线代表水驱油过程（上支），蓝色曲线代表油驱水过程（下支）。实际水驱油过程中，只有上支是物理上可实现的。</p>
+                </div>
+                <div id="doubleValuePlot" class="plot-container"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="results">
+        <h2 class="card-title">计算结果</h2>
+        
+        <div class="export-buttons">
+            <button class="btn export-btn" id="exportDataBtn">
+                <span>导出数据到CSV</span>
+            </button>
+            <button class="btn export-btn secondary" id="exportPlotBtn">
+                <span>导出图表为PNG</span>
+            </button>
+        </div>
+        
+        <div class="results-content">
+            <table id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>含水饱和度 S_w</th>
+                        <th>K_rw (水相)</th>
+                        <th>K_ro (油相)</th>
+                        <th>含水率 f_w</th>
+                        <th>导数 f'_w</th>
+                        <th>位置 x (m)</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody">
+                    <!-- 计算结果将在这里动态生成 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <footer>
+        <p>© 2023 油藏工程计算工具 | 基于Buckley-Leverett水驱油理论 | 仅供教学与科研使用</p>
+    </footer>
+
+    <script>
+        // 初始化参数
+        let Sw = [];
+        let Krw = [];
+        let Kro = [];
+        let fw = [];
+        let dfw_dSw = [];
+        let x = []; // 位置数组
+        
+        // 初始化图表
+        let relativePermeabilityPlot = document.getElementById('relativePermeabilityPlot');
+        let fwPlot = document.getElementById('fwPlot');
+        let dfwPlot = document.getElementById('dfwPlot');
+        let doubleValuePlot = document.getElementById('doubleValuePlot');
+        
+        // 默认实测数据（表6-2）
+        const DEFAULT_MEASURED_DATA = `0.200,0.000,0.800
+0.250,0.002,0.610
+0.300,0.009,0.470
+0.350,0.020,0.370
+0.400,0.038,0.285
+0.450,0.051,0.220
+0.500,0.075,0.163
+0.550,0.100,0.120
+0.600,0.132,0.081
+0.650,0.170,0.050
+0.700,0.208,0.027
+0.750,0.251,0.010
+0.800,0.300,0.000`;
+        
+        // 初始化图表
+        initPlots();
+        
+        // 绑定事件
+        document.getElementById('calculateBtn').addEventListener('click', calculate);
+        document.getElementById('exportDataBtn').addEventListener('click', exportData);
+        document.getElementById('exportPlotBtn').addEventListener('click', exportPlots);
+        document.getElementById('loadDefaultDataBtn').addEventListener('click', loadDefaultData);
+        document.getElementById('clearDataBtn').addEventListener('click', clearData);
+        
+        // 范围滑块事件
+        document.getElementById('swMin').addEventListener('input', function() {
+            document.getElementById('swMinValue').textContent = this.value;
+        });
+        
+        document.getElementById('swMax').addEventListener('input', function() {
+            document.getElementById('swMaxValue').textContent = this.value;
+        });
+        
+        // 自动计算累积注入量
+        document.getElementById('dailyInjectionRate').addEventListener('input', updateCumulativeInjection);
+        document.getElementById('timeDays').addEventListener('input', updateCumulativeInjection);
+        
+        // 标签切换
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+                
+                // 移除所有active类
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // 添加active类到当前标签和内容
+                this.classList.add('active');
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+            });
+        });
+        
+        // 初始化计算累积注入量
+        updateCumulativeInjection();
+        
+        // 初始化计算
+        calculate();
+        
+        function updateCumulativeInjection() {
+            const dailyInjectionRate = parseFloat(document.getElementById('dailyInjectionRate').value) || 0;
+            const timeDays = parseFloat(document.getElementById('timeDays').value) || 0;
+            const cumulativeInjection = dailyInjectionRate * timeDays;
+            document.getElementById('cumulativeInjection').value = cumulativeInjection.toFixed(2);
+        }
+        
+        function loadDefaultData() {
+            document.getElementById('measuredData').value = DEFAULT_MEASURED_DATA;
+            alert('已加载表6-2默认数据！');
+        }
+        
+        function clearData() {
+            document.getElementById('measuredData').value = '';
+            alert('已清空数据！');
+        }
+        
+        function calculate() {
+            // 获取参数
+            const swc = parseFloat(document.getElementById('swc').value);
+            const sor = parseFloat(document.getElementById('sor').value);
+            const swMin = parseFloat(document.getElementById('swMin').value);
+            const swMax = parseFloat(document.getElementById('swMax').value);
+            const swPoints = parseInt(document.getElementById('swPoints').value);
+            const mu_o = parseFloat(document.getElementById('mu_o').value);
+            const mu_w = parseFloat(document.getElementById('mu_w').value);
+            const bo = parseFloat(document.getElementById('bo').value);
+            const bw = parseFloat(document.getElementById('bw').value);
+            const porosity = parseFloat(document.getElementById('porosity').value);
+            const width = parseFloat(document.getElementById('width').value);
+            const thickness = parseFloat(document.getElementById('thickness').value);
+            const dailyInjectionRate = parseFloat(document.getElementById('dailyInjectionRate').value);
+            const timeDays = parseFloat(document.getElementById('timeDays').value);
+            
+            // 计算横截面积和累积注入量
+            const area = width * thickness;
+            const cumulativeInjection = dailyInjectionRate * timeDays;
+            
+            // 更新显示的累积注入量
+            document.getElementById('cumulativeInjection').value = cumulativeInjection.toFixed(2);
+            
+            // 生成饱和度数组
+            Sw = Array.from({length: swPoints}, (_, i) => 
+                swMin + (swMax - swMin) * i / (swPoints - 1)
+            );
+            
+            // 使用实测数据
+            const measuredData = parseMeasuredData();
+            if (measuredData.Sw.length === 0) {
+                alert('请正确输入实测数据！');
+                return;
+            }
+            Krw = interpolateData(Sw, measuredData.Sw, measuredData.Krw);
+            Kro = interpolateData(Sw, measuredData.Sw, measuredData.Kro);
+            
+            // 计算含水率 fw（考虑体积系数）
+            fw = Sw.map((sw, i) => {
+                if (Krw[i] === 0) return 0;
+                // 考虑体积系数的含水率公式
+                return 1 / (1 + (Kro[i] / mu_o) * (mu_w / Krw[i]) * (bw / bo));
+            });
+            
+            // 计算含水率导数 f'(Sw)（数值微分）
+            dfw_dSw = calculateDerivative(Sw, fw);
+            
+            // 根据式(6-37)计算位置 x: x - x0 = (f'_w(S_w) / (φA)) * ∫Q dt
+            // 假设初始位置 x0 = 0
+            const x0 = 0;
+            x = dfw_dSw.map(dfw => {
+                return x0 + (dfw / (porosity * area)) * cumulativeInjection;
+            });
+            
+            // 更新图表
+            updatePlots();
+            
+            // 更新结果表格
+            updateResultsTable();
+        }
+        
+        function parseMeasuredData() {
+            const text = document.getElementById('measuredData').value.trim();
+            const lines = text.split('\n').filter(line => line.trim() !== '');
+            
+            const Sw_measured = [];
+            const Krw_measured = [];
+            const Kro_measured = [];
+            
+            for (let line of lines) {
+                const parts = line.split(',').map(part => parseFloat(part.trim()));
+                if (parts.length >= 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+                    Sw_measured.push(parts[0]);
+                    Krw_measured.push(parts[1]);
+                    Kro_measured.push(parts[2]);
+                }
+            }
+            
+            // 按饱和度排序
+            const combined = Sw_measured.map((sw, i) => ({sw, krw: Krw_measured[i], kro: Kro_measured[i]}));
+            combined.sort((a, b) => a.sw - b.sw);
+            
+            const sortedSw = combined.map(item => item.sw);
+            const sortedKrw = combined.map(item => item.krw);
+            const sortedKro = combined.map(item => item.kro);
+            
+            return {
+                Sw: sortedSw,
+                Krw: sortedKrw,
+                Kro: sortedKro
+            };
+        }
+        
+        function interpolateData(xTarget, xSource, ySource) {
+            // 线性插值
+            const result = [];
+            
+            for (let x of xTarget) {
+                // 如果x在源数据范围内，进行插值
+                if (x <= xSource[0]) {
+                    result.push(ySource[0]);
+                } else if (x >= xSource[xSource.length - 1]) {
+                    result.push(ySource[ySource.length - 1]);
+                } else {
+                    // 找到插值区间
+                    let i = 0;
+                    while (i < xSource.length - 1 && x > xSource[i + 1]) {
+                        i++;
+                    }
+                    
+                    // 线性插值
+                    const x1 = xSource[i];
+                    const x2 = xSource[i + 1];
+                    const y1 = ySource[i];
+                    const y2 = ySource[i + 1];
+                    
+                    const y = y1 + (y2 - y1) * (x - x1) / (x2 - x1);
+                    result.push(y);
+                }
+            }
+            
+            return result;
+        }
+        
+        function calculateDerivative(x, y) {
+            const n = x.length;
+            const derivative = new Array(n);
+            
+            // 中心差分
+            for (let i = 1; i < n - 1; i++) {
+                derivative[i] = (y[i+1] - y[i-1]) / (x[i+1] - x[i-1]);
+            }
+            
+            // 边界：前向差分和后向差分
+            derivative[0] = (y[1] - y[0]) / (x[1] - x[0]);
+            derivative[n-1] = (y[n-1] - y[n-2]) / (x[n-1] - x[n-2]);
+            
+            return derivative;
+        }
+        
+        function initPlots() {
+            // 初始化相对渗透率曲线图
+            Plotly.newPlot(relativePermeabilityPlot, [{
+                x: [],
+                y: [],
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'K<sub>rw</sub> (水相)',
+                line: {color: 'blue', width: 3},
+                marker: {size: 6}
+            }, {
+                x: [],
+                y: [],
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'K<sub>ro</sub> (油相)',
+                line: {color: 'red', width: 3},
+                marker: {size: 6}
+            }], {
+                title: '油水相对渗透率曲线（实测数据）',
+                xaxis: {title: '含水饱和度 S<sub>w</sub>', gridcolor: '#f0f0f0'},
+                yaxis: {title: '相对渗透率', gridcolor: '#f0f0f0'},
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: {family: 'Arial, sans-serif', size: 12},
+                showlegend: true,
+                legend: {x: 0.02, y: 0.98, bgcolor: 'rgba(255,255,255,0.8)'},
+                margin: {l: 60, r: 40, t: 50, b: 50}
+            });
+            
+            // 初始化含水率曲线图
+            Plotly.newPlot(fwPlot, [{
+                x: [],
+                y: [],
+                type: 'scatter',
+                mode: 'lines',
+                name: 'f<sub>w</sub>(S<sub>w</sub>)',
+                line: {color: 'black', width: 3}
+            }], {
+                title: '含水率曲线 f<sub>w</sub>(S<sub>w</sub>)',
+                xaxis: {title: '含水饱和度 S<sub>w</sub>', gridcolor: '#f0f0f0'},
+                yaxis: {title: '含水率 f<sub>w</sub>', gridcolor: '#f0f0f0'},
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: {family: 'Arial, sans-serif', size: 12},
+                showlegend: true,
+                margin: {l: 60, r: 40, t: 50, b: 50}
+            });
+            
+            // 初始化含水率导数曲线图
+            Plotly.newPlot(dfwPlot, [{
+                x: [],
+                y: [],
+                type: 'scatter',
+                mode: 'lines',
+                name: "f'<sub>w</sub>(S<sub>w</sub>)",
+                line: {color: 'magenta', width: 3}
+            }], {
+                title: "含水率导数曲线 f'<sub>w</sub>(S<sub>w</sub>)",
+                xaxis: {title: '含水饱和度 S<sub>w</sub>', gridcolor: '#f0f0f0'},
+                yaxis: {title: "f'<sub>w</sub>(S<sub>w</sub>)", gridcolor: '#f0f0f0'},
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: {family: 'Arial, sans-serif', size: 12},
+                showlegend: true,
+                margin: {l: 60, r: 40, t: 50, b: 50}
+            });
+            
+            // 初始化饱和度-位置双值曲线图
+            Plotly.newPlot(doubleValuePlot, [{
+                x: [],
+                y: [],
+                type: 'scatter',
+                mode: 'lines',
+                name: '水驱油过程 (上支)',
+                line: {color: 'red', width: 3}
+            }, {
+                x: [],
+                y: [],
+                type: 'scatter',
+                mode: 'lines',
+                name: '油驱水过程 (下支)',
+                line: {color: 'blue', width: 3}
+            }, {
+                x: [],
+                y: [],
+                type: 'scatter',
+                mode: 'markers',
+                name: '分界点',
+                marker: {color: 'black', size: 10}
+            }], {
+                title: '饱和度-位置双值曲线 (式6-37)',
+                xaxis: {title: '位置 x (m)', gridcolor: '#f0f0f0'},
+                yaxis: {title: '含水饱和度 S<sub>w</sub>', gridcolor: '#f0f0f0'},
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: {family: 'Arial, sans-serif', size: 12},
+                showlegend: true,
+                legend: {x: 0.02, y: 0.98, bgcolor: 'rgba(255,255,255,0.8)'},
+                margin: {l: 60, r: 40, t: 50, b: 50}
+            });
+        }
+        
+        function updatePlots() {
+            // 更新相对渗透率曲线
+            Plotly.update(relativePermeabilityPlot, {
+                x: [Sw, Sw],
+                y: [Krw, Kro]
+            }, {
+                xaxis: {range: [Math.min(...Sw), Math.max(...Sw)]},
+                yaxis: {range: [0, Math.max(...Krw, ...Kro) * 1.1]},
+                title: '油水相对渗透率曲线（实测数据插值）'
+            });
+            
+            // 更新含水率曲线
+            Plotly.update(fwPlot, {
+                x: [Sw],
+                y: [fw]
+            }, {
+                xaxis: {range: [Math.min(...Sw), Math.max(...Sw)]},
+                yaxis: {range: [0, 1]}
+            });
+            
+            // 更新含水率导数曲线
+            Plotly.update(dfwPlot, {
+                x: [Sw],
+                y: [dfw_dSw]
+            }, {
+                xaxis: {range: [Math.min(...Sw), Math.max(...Sw)]},
+                yaxis: {range: [Math.min(...dfw_dSw) * 1.1, Math.max(...dfw_dSw) * 1.1]}
+            });
+            
+            // 更新饱和度-位置双值曲线
+            // 找到f'_w的最大值点（双值曲线的分界点）
+            const maxDfwIndex = dfw_dSw.indexOf(Math.max(...dfw_dSw));
+            
+            // 分离上下支
+            const xUp = x.slice(maxDfwIndex); // 上支：从分界点到末尾
+            const SwUp = Sw.slice(maxDfwIndex);
+            const xDown = x.slice(0, maxDfwIndex + 1); // 下支：从开头到分界点（包含分界点）
+            const SwDown = Sw.slice(0, maxDfwIndex + 1);
+            
+            Plotly.update(doubleValuePlot, {
+                x: [xUp, xDown, [x[maxDfwIndex]]],
+                y: [SwUp, SwDown, [Sw[maxDfwIndex]]]
+            }, {
+                xaxis: {range: [Math.min(...x), Math.max(...x)]},
+                yaxis: {range: [Math.min(...Sw), Math.max(...Sw)]},
+                title: `饱和度-位置双值曲线 (式6-37)`
+            });
+        }
+        
+        function updateResultsTable() {
+            const tableBody = document.getElementById('resultsBody');
+            tableBody.innerHTML = '';
+            
+            // 每10个点显示一个，避免表格过大
+            const step = Math.max(1, Math.floor(Sw.length / 20));
+            
+            for (let i = 0; i < Sw.length; i += step) {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${Sw[i].toFixed(4)}</td>
+                    <td>${Krw[i].toFixed(6)}</td>
+                    <td>${Kro[i].toFixed(6)}</td>
+                    <td>${fw[i].toFixed(4)}</td>
+                    <td>${dfw_dSw[i].toFixed(4)}</td>
+                    <td>${x[i].toFixed(2)}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            }
+            
+            // 如果最后一个点没有被包含，添加它
+            if ((Sw.length - 1) % step !== 0) {
+                const i = Sw.length - 1;
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${Sw[i].toFixed(4)}</td>
+                    <td>${Krw[i].toFixed(6)}</td>
+                    <td>${Kro[i].toFixed(6)}</td>
+                    <td>${fw[i].toFixed(4)}</td>
+                    <td>${dfw_dSw[i].toFixed(4)}</td>
+                    <td>${x[i].toFixed(2)}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            }
+        }
+        
+        function exportData() {
+            // 获取参数用于添加到CSV文件头
+            const swc = document.getElementById('swc').value;
+            const sor = document.getElementById('sor').value;
+            const mu_o = document.getElementById('mu_o').value;
+            const mu_w = document.getElementById('mu_w').value;
+            const bo = document.getElementById('bo').value;
+            const bw = document.getElementById('bw').value;
+            const porosity = document.getElementById('porosity').value;
+            const width = document.getElementById('width').value;
+            const thickness = document.getElementById('thickness').value;
+            const dailyInjectionRate = document.getElementById('dailyInjectionRate').value;
+            const timeDays = document.getElementById('timeDays').value;
+            const cumulativeInjection = document.getElementById('cumulativeInjection').value;
+            
+            // 创建CSV内容
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Buckley-Leverett水驱油理论计算结果\n";
+            csvContent += "计算参数:\n";
+            csvContent += `束缚水饱和度 S_wc,${swc}\n`;
+            csvContent += `残余油饱和度 S_or,${sor}\n`;
+            csvContent += `油相粘度 μ_o (mPa·s),${mu_o}\n`;
+            csvContent += `水相粘度 μ_w (mPa·s),${mu_w}\n`;
+            csvContent += `油的体积系数 B_o,${bo}\n`;
+            csvContent += `水的体积系数 B_w,${bw}\n`;
+            csvContent += `孔隙度 φ,${porosity}\n`;
+            csvContent += `宽度 W (m),${width}\n`;
+            csvContent += `厚度 h (m),${thickness}\n`;
+            csvContent += `日注入速度 q_w (m³/d),${dailyInjectionRate}\n`;
+            csvContent += `注入时间 t (天),${timeDays}\n`;
+            csvContent += `累积注入量 ∫Qdt (m³),${cumulativeInjection}\n`;
+            csvContent += "\n计算结果:\n";
+            csvContent += "含水饱和度S_w,水相相对渗透率K_rw,油相相对渗透率K_ro,含水率f_w,含水率导数f'_w,位置x(m)\n";
+            
+            for (let i = 0; i < Sw.length; i++) {
+                csvContent += `${Sw[i].toFixed(6)},${Krw[i].toFixed(6)},${Kro[i].toFixed(6)},${fw[i].toFixed(6)},${dfw_dSw[i].toFixed(6)},${x[i].toFixed(6)}\n`;
+            }
+            
+            // 创建下载链接
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "buckley_leverett_results.csv");
+            document.body.appendChild(link);
+            
+            // 触发下载
+            link.click();
+            document.body.removeChild(link);
+            
+            alert("数据已导出为CSV文件！");
+        }
+        
+        function exportPlots() {
+            // 这里只是演示，实际实现需要服务器端支持或使用Plotly的导出功能
+            alert("图表导出功能需要Plotly完整版支持。在完整版中，可以使用Plotly.downloadImage()函数导出图表。");
+        }
+        
+        // 渲染MathJax公式
+        if (window.MathJax) {
+            window.MathJax.typesetPromise();
+        }
+    </script>
+</body>
+</html>
